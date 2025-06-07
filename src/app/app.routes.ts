@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './components/layout/layout.component';
 import { LoginComponent } from './modules/login/login/login.component';
+import { authGuard } from './core/guard/auth.guard';
 
 const dashboardModule = () => import('./modules/dashboard/dashboard.module').then(m => m.DashboardModule)
 const plansModule = () => import('./modules/plans/plans.module').then(m => m.PlansModule)
@@ -9,10 +10,11 @@ const allListModule = () => import('./modules/all-list/all-list.module').then(m 
 const bookingModule = () => import('./modules/bookings/bookings.module').then(m => m.BookingsModule)
 
 export const routes: Routes = [
+    { path: '', redirectTo: 'login', pathMatch: 'full' },
+    { path: 'login', component: LoginComponent },
     {
-        path: '', component: LayoutComponent,
+        path: '', component: LayoutComponent, canActivate: [authGuard],
         children: [
-            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', loadChildren: dashboardModule },
             { path: 'plans', loadChildren: plansModule },
             { path: 'chat', loadChildren: chatModule },
@@ -20,6 +22,5 @@ export const routes: Routes = [
             { path: 'bookings', loadChildren: bookingModule }
         ]
     },
-    { path: 'login', component: LoginComponent },
-    { path: '**', redirectTo: 'dashboard' }
+    { path: '**', redirectTo: 'login' }
 ];
