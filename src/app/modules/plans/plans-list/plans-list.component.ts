@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { NgbModal, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { AlertService } from '../../../shared/components/alert/service/alert.service';
 import { PlanServiceService } from '../services/plan-service.service';
 import { Plan } from '../models/plans';
+import { FilterPipe } from '../../../shared/pipes/filter.pipe';
 
 @Component({
   selector: 'app-plans-list',
-  imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
+  imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule, FilterPipe, FormsModule],
   templateUrl: './plans-list.component.html',
   styleUrl: './plans-list.component.css'
 })
@@ -16,6 +17,8 @@ export class PlansListComponent implements OnInit {
   planForm: FormGroup;
   plans: Plan[] = [];
   editingPlanId: string | null = null;
+  filterText!: string;
+  loading: boolean = true;
 
   constructor(
     private modalService: NgbModal,
@@ -37,11 +40,14 @@ export class PlansListComponent implements OnInit {
   }
 
   loadPlansList() {
+    this.loading = true;
     this.service.getPlansList().subscribe({
       next: (res) => {
         this.plans = res.data || []
+                this.loading = false;
       },
       error: (err) => {
+        this.loading = false;
         this.alertService.showAlert({
           message: 'Failed to fetch plans. Please try again.',
           type: 'error',
@@ -91,11 +97,10 @@ export class PlansListComponent implements OnInit {
       const formPlan = this.planForm.value;
       const planData = {
         name: formPlan.planName,
-        bookingFrequency: formPlan.bookings,
-        timePeriod: formPlan.validity,
-        amount: formPlan.amount
+        bookingFrequency: +formPlan.bookings,
+        timePeriod: +formPlan.validity,
+        amount: +formPlan.amount
       };
-
 
       if (this.editingPlanId) {
         this.service.updatePlan(this.editingPlanId, planData).subscribe({

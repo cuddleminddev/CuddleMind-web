@@ -6,65 +6,75 @@
                     <span class="input-group-text bg-white border-end-0">
                         <i class="fas fa-search text-muted"></i>
                     </span>
-                    <input type="text" class="form-control border-start-0" placeholder="Search plans">
+                    <input type="text" class="form-control border-start-0" placeholder="Search plans"
+                        [(ngModel)]="filterText">
                 </div>
                 <button class="btn btn-primary" (click)="openModal(content)"><i class="fa-regular fa-plus me-2"></i>
                     Add</button>
             </div>
 
-            <div class="table-responsive">
-                <table class="table align-middle table-hover bg-white rounded">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 40px;"><input type="checkbox" class="form-check-input custom-checkbox">
-                            </th>
-                            <th>Plan Name</th>
-                            <th>Amount</th>
-                            <th>Validity</th>
-                            <th>No of Bookings</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody *ngIf="plans.length > 0; else noPlans">
-                        <tr *ngFor="let plan of plans">
-                            <td><input type="checkbox" class="form-check-input custom-checkbox"></td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <!-- <img src="assects/user.png" class="rounded" width="30" height="30" alt="Plan Icon"> -->
-                                    <div>
-                                        <div class="fw-semibold">{{ plan.name }}</div>
-                                        <!-- <small class="text-muted">{{ plan.description }}</small> -->
+            <div *ngIf="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <div *ngIf="!loading">
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover bg-white rounded">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox"
+                                        class="form-check-input custom-checkbox">
+                                </th>
+                                <th>Plan Name</th>
+                                <th>Amount</th>
+                                <th>Validity</th>
+                                <th>No of Bookings</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="plans.length > 0; else noPlans">
+                            <tr *ngFor="let plan of plans | filter: filterText: 'name'">
+                                <td><input type="checkbox" class="form-check-input custom-checkbox"></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <!-- <img src="assects/user.png" class="rounded" width="30" height="30" alt="Plan Icon"> -->
+                                        <div>
+                                            <div class="fw-semibold">{{ plan.name }}</div>
+                                            <!-- <small class="text-muted">{{ plan.description }}</small> -->
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>${{ plan.amount }}</td>
-                            <td>{{ plan.timePeriod }} Days</td>
-                            <td>{{ plan.bookingFrequency }}</td>
-                            <td>
-                                <span class="px-2 py-1 rounded-pill d-inline-block" [ngStyle]="plan.isActive 
+                                </td>
+                                <td>${{ plan.amount }}</td>
+                                <td>{{ plan.timePeriod }} Days</td>
+                                <td>{{ plan.bookingFrequency }}</td>
+                                <td>
+                                    <span class="px-2 py-1 rounded-pill d-inline-block" [ngStyle]="plan.isActive 
      ? {'background-color': 'rgba(40, 167, 69, 0.15)', 'color': '#28a745'} 
      : {'background-color': 'rgba(108, 117, 125, 0.15)', 'color': '#6c757d'}">
-                                    {{ plan.isActive ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
-                            <td>
-                                <i class="fa-regular fa-pen-to-square me-3 cursor-pointer"
-                                    (click)="openModal(content, plan)" placement="top" ngbTooltip="Edit"></i>
-                                <i class="fa-solid fa-arrow-right text-secondary cursor-pointer"></i>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <ng-template #noPlans>
-                        <tbody>
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fa-regular fa-folder-open fa-lg me-2"></i>No plans available
+                                        {{ plan.isActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fa-regular fa-pen-to-square me-3 cursor-pointer"
+                                        (click)="openModal(content, plan)" placement="top" ngbTooltip="Edit"></i>
+                                    <i class="fa-solid fa-arrow-right text-secondary cursor-pointer"></i>
                                 </td>
                             </tr>
                         </tbody>
-                    </ng-template>
-                </table>
+                        <ng-template #noPlans>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fa-regular fa-folder-open fa-lg me-2"></i>No plans available
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </ng-template>
+                    </table>
+                </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mt-1">
