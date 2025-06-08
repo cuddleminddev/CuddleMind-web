@@ -22,30 +22,48 @@
                             <th>Amount</th>
                             <th>Validity</th>
                             <th>No of Bookings</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody *ngIf="plans.length > 0; else noPlans">
                         <tr *ngFor="let plan of plans">
                             <td><input type="checkbox" class="form-check-input custom-checkbox"></td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <!-- <img src="assects/user.png" class="rounded" width="30" height="30" alt="Plan Icon"> -->
                                     <div>
-                                        <div class="fw-semibold">{{ plan.planName }}</div>
-                                        <small class="text-muted">{{ plan.description }}</small>
+                                        <div class="fw-semibold">{{ plan.name }}</div>
+                                        <!-- <small class="text-muted">{{ plan.description }}</small> -->
                                     </div>
                                 </div>
                             </td>
                             <td>${{ plan.amount }}</td>
-                            <td>{{ plan.validity }} Days</td>
-                            <td>{{ plan.bookings }}</td>
+                            <td>{{ plan.timePeriod }} Days</td>
+                            <td>{{ plan.bookingFrequency }}</td>
                             <td>
-                                <i class="fa-regular fa-pen-to-square me-3 cursor-pointer" placement="top" ngbTooltip="Edit"></i>
+                                <span class="px-2 py-1 rounded-pill d-inline-block" [ngStyle]="plan.isActive 
+     ? {'background-color': 'rgba(40, 167, 69, 0.15)', 'color': '#28a745'} 
+     : {'background-color': 'rgba(108, 117, 125, 0.15)', 'color': '#6c757d'}">
+                                    {{ plan.isActive ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <i class="fa-regular fa-pen-to-square me-3 cursor-pointer"
+                                    (click)="openModal(content, plan)" placement="top" ngbTooltip="Edit"></i>
                                 <i class="fa-solid fa-arrow-right text-secondary cursor-pointer"></i>
                             </td>
                         </tr>
                     </tbody>
+                    <ng-template #noPlans>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fa-regular fa-folder-open fa-lg me-2"></i>No plans available
+                                </td>
+                            </tr>
+                        </tbody>
+                    </ng-template>
                 </table>
             </div>
 
@@ -79,7 +97,9 @@
         <form [formGroup]="planForm" (ngSubmit)="onSave(modal)">
             <div class="mb-3">
 
-                <input type="text" class="form-control mb-2" placeholder="Plan name" formControlName="planName" />
+                <label for="planName" class="form-label">Plan Name</label>
+                <input type="text" id="planName" class="form-control mb-2" placeholder="Enter plan name"
+                    formControlName="planName" />
                 <div *ngIf="planForm.get('planName')?.touched && planForm.get('planName')?.invalid"
                     class="text-danger small">
                     <div *ngIf="planForm.get('planName')?.errors?.['required']">Plan name is required.</div>
@@ -87,23 +107,27 @@
                         characters.</div>
                 </div>
 
-                <textarea rows="3" class="form-control mb-2" placeholder="Description"
+                <!-- <textarea rows="3" class="form-control mb-2" placeholder="Description"
                     formControlName="description"></textarea>
                 <div *ngIf="planForm.get('description')?.touched && planForm.get('description')?.invalid"
                     class="text-danger small">
                     <div *ngIf="planForm.get('description')?.errors?.['required']">Description is required.</div>
                     <div *ngIf="planForm.get('description')?.errors?.['minlength']">Description must be at least 10
                         characters.</div>
-                </div>
+                </div> -->
 
-                <input type="number" class="form-control mb-2" placeholder="Amount" formControlName="amount" />
+                <label for="amount" class="form-label">Amount ($)</label>
+                <input type="number" id="amount" class="form-control mb-2" placeholder="Enter amount"
+                    formControlName="amount" />
                 <div *ngIf="planForm.get('amount')?.touched && planForm.get('amount')?.invalid"
                     class="text-danger small">
                     <div *ngIf="planForm.get('amount')?.errors?.['required']">Amount is required.</div>
                     <div *ngIf="planForm.get('amount')?.errors?.['min']">Amount must be greater than 0.</div>
                 </div>
 
-                <input type="number" class="form-control mb-2" placeholder="Validity" formControlName="validity" />
+                <label for="validity" class="form-label">Validity (in days)</label>
+                <input type="number" id="validity" class="form-control mb-2" placeholder="Enter validity"
+                    formControlName="validity" />
                 <div *ngIf="planForm.get('validity')?.touched && planForm.get('validity')?.invalid"
                     class="text-danger small">
                     <div *ngIf="planForm.get('validity')?.errors?.['required']">Validity is required.</div>
@@ -111,7 +135,9 @@
                         integer.</div>
                 </div>
 
-                <input type="number" class="form-control" placeholder="No of bookings" formControlName="bookings" />
+                <label for="bookings" class="form-label">Number of Bookings</label>
+                <input type="number" id="bookings" class="form-control" placeholder="Enter number of bookings"
+                    formControlName="bookings" />
                 <div *ngIf="planForm.get('bookings')?.touched && planForm.get('bookings')?.invalid"
                     class="text-danger small">
                     <div *ngIf="planForm.get('bookings')?.errors?.['required']">Number of bookings is required.</div>

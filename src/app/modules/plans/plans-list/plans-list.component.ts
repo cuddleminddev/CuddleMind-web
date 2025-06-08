@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { NgbModal, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { AlertService } from '../../../shared/components/alert/service/alert.service';
+import { PlanServiceService } from '../services/plan-service.service';
+import { Plan } from '../models/plans';
 
 @Component({
   selector: 'app-plans-list',
@@ -10,44 +12,44 @@ import { AlertService } from '../../../shared/components/alert/service/alert.ser
   templateUrl: './plans-list.component.html',
   styleUrl: './plans-list.component.css'
 })
-export class PlansListComponent {
+export class PlansListComponent implements OnInit {
   planForm: FormGroup;
-  plans: any[] = [
-    {
-      planName: 'Basic Plan',
-      description: 'Description about basic plan',
-      amount: 1999,
-      validity: '30',
-      bookings: 3,
-    },
-    {
-      planName: 'Standard Plan',
-      description: 'Description about standard plan',
-      amount: 3999,
-      validity: '60',
-      bookings: 5,
-    },
-    {
-      planName: 'Premium Plan',
-      description: 'Description about premium plan',
-      amount: 5999,
-      validity: '90',
-      bookings: 8,
-    }
-  ];
+  plans: Plan[] = [];
+  editingPlanId: string | null = null;
 
   constructor(
     private modalService: NgbModal,
     private fb: FormBuilder,
-    private alertService: AlertService
+    private alertService: AlertService,
+    private service: PlanServiceService
   ) {
     this.planForm = this.fb.group({
       planName: ['', [Validators.required, Validators.minLength(3)]],
-      amount: ['', [Validators.required, Validators.min(1)]],
+      amount: ['', [Validators.required, this.positiveIntegerValidator]],
       validity: ['', [Validators.required, this.positiveIntegerValidator]],
       bookings: ['', [Validators.required, this.positiveIntegerValidator]],
-      description: ['', [Validators.required, Validators.minLength(10)]]
+      // description: ['', [Validators.required, Validators.minLength(10)]]
     });
+  }
+
+  ngOnInit(): void {
+    this.loadPlansList()
+  }
+
+  loadPlansList() {
+    this.service.getPlansList().subscribe({
+      next: (res) => {
+        this.plans = res.data || []
+      },
+      error: (err) => {
+        this.alertService.showAlert({
+          message: 'Failed to fetch plans. Please try again.',
+          type: 'error',
+          autoDismiss: true,
+          duration: 4000
+        });
+      }
+    })
   }
 
   positiveIntegerValidator(control: AbstractControl): ValidationErrors | null {
@@ -64,27 +66,83 @@ export class PlansListComponent {
     return null;
   }
 
-  openModal(content: any) {
+  openModal(content: any, plan?: Plan) {
     const buttonElement = document.activeElement as HTMLElement
     buttonElement.blur();
 
-    this.modalService.open(content)
+    if (plan) {
+      this.editingPlanId = plan.id;
+      this.planForm.patchValue({
+        planName: plan.name,
+        amount: plan.amount,
+        validity: plan.timePeriod,
+        bookings: plan.bookingFrequency,
+      });
+    } else {
+      this.editingPlanId = null;
+      this.planForm.reset();
+    }
+
+    this.modalService.open(content);
   }
 
   onSave(modal: any) {
     if (this.planForm.valid) {
-      const newPlan = this.planForm.value;
-      this.plans.push(newPlan);
+      const formPlan = this.planForm.value;
+      const planData = {
+        name: formPlan.planName,
+        bookingFrequency: formPlan.bookings,
+        timePeriod: formPlan.validity,
+        amount: formPlan.amount
+      };
 
-      this.alertService.showAlert({
-        message: 'Plan Created',
-        type: 'success',
-        autoDismiss: true,
-        duration: 4000
-      })
 
-      this.planForm.reset();
-      modal.close('Save click');
+      if (this.editingPlanId) {
+        this.service.updatePlan(this.editingPlanId, planData).subscribe({
+          next: (res) => {
+            this.alertService.showAlert({
+              message: 'Plan updated successfully',
+              type: 'success',
+              autoDismiss: true,
+              duration: 4000
+            });
+            this.loadPlansList();
+            this.planForm.reset();
+            modal.close('Save click');
+            this.editingPlanId = null;
+          },
+          error: () => {
+            this.alertService.showAlert({
+              message: 'Failed to update plan. Please try again.',
+              type: 'error',
+              autoDismiss: true,
+              duration: 4000
+            });
+          }
+        });
+      } else {
+        this.service.createPlan(planData).subscribe({
+          next: () => {
+            this.alertService.showAlert({
+              message: 'Plan Created',
+              type: 'success',
+              autoDismiss: true,
+              duration: 4000
+            });
+            this.loadPlansList();
+            this.planForm.reset();
+            modal.close('Save click');
+          },
+          error: () => {
+            this.alertService.showAlert({
+              message: 'Failed to create plan. Please try again.',
+              type: 'error',
+              autoDismiss: true,
+              duration: 4000
+            });
+          }
+        });
+      }
     } else {
       this.planForm.markAllAsTouched();
     }
@@ -92,6 +150,7 @@ export class PlansListComponent {
 
   close() {
     this.planForm.reset()
+    this.editingPlanId = null;
     this.modalService.dismissAll()
   }
 
