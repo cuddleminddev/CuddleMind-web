@@ -1,0 +1,23 @@
+<div class="d-flex justify-content-between align-items-center mt-1 flex-wrap">
+  <!-- Left Side -->
+  <div class="d-flex align-items-center">
+    <select class="form-select form-select-sm w-auto me-2" [ngModel]="itemsPerPage" (ngModelChange)="onItemsPerPageChange($event)">
+      <option *ngFor="let option of [10, 20, 50]" [value]="option">{{ option }}</option>
+    </select>
+    <span class="small">Items per page</span>
+  </div>
+
+  <!-- Right Side -->
+  <div class="d-flex align-items-center">
+    <span class="small me-2">
+      {{ (currentPage - 1) * itemsPerPage + 1 }} -
+      {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} items
+    </span>
+
+    <button class="btn btn-outline-secondary btn-sm me-2 px-2" [disabled]="currentPage === 1" (click)="onPrev()">‹</button>
+
+    <span class="small me-2">{{ currentPage }} of {{ totalPages }} pages</span>
+
+    <button class="btn btn-outline-secondary btn-sm px-2" [disabled]="currentPage === totalPages" (click)="onNext()">›</button>
+  </div>
+</div>

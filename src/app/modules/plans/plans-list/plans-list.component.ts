@@ -6,10 +6,11 @@ import { AlertService } from '../../../shared/components/alert/service/alert.ser
 import { PlanServiceService } from '../services/plan-service.service';
 import { Plan } from '../models/plans';
 import { FilterPipe } from '../../../shared/pipes/filter.pipe';
+import { PaginationComponent } from "../../../shared/components/pagination/pagination.component";
 
 @Component({
   selector: 'app-plans-list',
-  imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule, FilterPipe, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule, FilterPipe, FormsModule, PaginationComponent],
   templateUrl: './plans-list.component.html',
   styleUrl: './plans-list.component.css'
 })
@@ -19,6 +20,11 @@ export class PlansListComponent implements OnInit {
   editingPlanId: string | null = null;
   filterText!: string;
   loading: boolean = true;
+
+  totalPlans!: number;
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  paginatedPlans: Plan[] = [];
 
   constructor(
     private modalService: NgbModal,
@@ -44,7 +50,9 @@ export class PlansListComponent implements OnInit {
     this.service.getPlansList().subscribe({
       next: (res) => {
         this.plans = res.data || []
-                this.loading = false;
+        this.totalPlans = this.plans.length;
+        this.updatePaginatedPlans();
+        this.loading = false;
       },
       error: (err) => {
         this.loading = false;
@@ -157,6 +165,23 @@ export class PlansListComponent implements OnInit {
     this.planForm.reset()
     this.editingPlanId = null;
     this.modalService.dismissAll()
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePaginatedPlans();
+  }
+
+  onItemsPerPageChange(limit: number) {
+    this.itemsPerPage = limit;
+    this.currentPage = 1;
+    this.updatePaginatedPlans();
+  }
+
+  updatePaginatedPlans() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = this.currentPage * this.itemsPerPage;
+    this.paginatedPlans = this.plans.slice(startIndex, endIndex);
   }
 
 }
